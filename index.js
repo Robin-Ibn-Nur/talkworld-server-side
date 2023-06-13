@@ -55,7 +55,8 @@ async function run() {
 
     const usersCollection = client.db("TalkWorld").collection("users");
     const classCollection = client.db("TalkWorld").collection("class");
-    
+    const selectedClassCollection = client.db("TalkWorld").collection("selectedClass");
+
     //create jwt token
     app.post('/jwt-token', (req, res) => {
       const user = req.body;
@@ -108,7 +109,6 @@ async function run() {
     // make admin
     app.patch('/users/admin/:id', async (req, res) => {
       const id = req.params.id;
-      console.log(id);
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
@@ -124,7 +124,6 @@ async function run() {
     // make instructor
     app.patch('/users/instructor/:id', async (req, res) => {
       const id = req.params.id;
-      console.log(id);
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
         $set: {
@@ -186,6 +185,34 @@ async function run() {
       const sameEmail = { instructorEmail: email }
       const instructorEmail = await classCollection.find(sameEmail).toArray();
       res.send(instructorEmail)
+    })
+
+    // selectedClass stored in db
+    app.post('/selectedClasses', async (req, res) => {
+      const selectedClass = req.body;
+      const result = await selectedClassCollection.insertOne(selectedClass);
+      res.send(result)
+    })
+
+    // display selectedClasses to mySelectedClasses on student dashbord
+    app.get('/selectedClasses', async (req, res) => {
+      const result = await selectedClassCollection.find().toArray();
+      res.send(result);
+    })
+
+    // delete selectedClass from mySelectedClasses
+    // TODO: delete hocche na ...... 
+    app.delete('/selectedClasses/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await selectedClassCollection.deleteOne(query)
+      if (result.deletedCount === 0) {
+        console.log("Successfully deleted one document.");
+        return res.send(result)
+      } else {
+        console.log("No documents matched the query. Deleted 0 documents.");
+      }
+      res.send(result)
     })
 
     // Send a ping to confirm a successful connection
