@@ -281,7 +281,7 @@ async function run() {
       res.send(result)
     })
 
-    // display paid class on myEnrolledClass dashbord via id
+    // display data for payment via id
     // done
     app.get('/dashbord/payment/:id', async (req, res) => {
       const id = req.params.id;
@@ -320,6 +320,8 @@ async function run() {
       res.send({ insertResult, deleteResult });
     });
 
+
+    
     // data display after successfully pay on the my enroll class
     app.get('/payments', async (req, res) => {
       const email = req.query.email;
