@@ -180,9 +180,9 @@ async function run() {
     })
 
     // display all classes on class page
-    app.get('/classes', async (req, res) => {
-      const classes = await classCollection.find().toArray();
-      res.send(classes);
+    app.get('/classPage', async (req, res) => {
+      const result = await classCollection.find().toArray();
+      res.send(result);
     })
 
     // display 6 populer classes on the home page based on availableSeats
@@ -215,11 +215,7 @@ async function run() {
 
     // display all populer classes on the admin manage classes dashbord
     // done
-    app.get('/allClass', verifyJWT, async (req, res) => {
-      const decodedEmail = req.decoded.email;
-      if (email !== decodedEmail) {
-        return res.status(403).send({ error: true, message: 'forbidden access' })
-      }
+    app.get('/allClass', async (req, res) => {
       const result = await classCollection.find().toArray();
       res.send(result)
     })
@@ -291,7 +287,7 @@ async function run() {
 
     // display selectedClasses to mySelectedClasses on student dashbord
     // done
-    app.get('/selectedClasses', verifyJWT, async (req, res) => {
+    app.get('/selectedClasses', async (req, res) => {
       const email = req.query.email;
       if (!email) {
         res.send([]);
