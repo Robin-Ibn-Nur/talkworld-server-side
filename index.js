@@ -32,19 +32,19 @@ const verifyJWT = (req, res, next) => {
 
 // const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.swu9d.mongodb.net/?retryWrites=true&w=majority`;
 
-// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.h290xzo.mongodb.net/?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.h290xzo.mongodb.net/?retryWrites=true&w=majority`;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
-// const client = new MongoClient(uri, {
-//   serverApi: {
-//     version: ServerApiVersion.v1,
-//     strict: true,
-//     deprecationErrors: true,
-//   }
-// });
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
 
 
-const uri = 'mongodb://0.0.0.0:27017/'
-const client = new MongoClient(uri);
+// const uri = 'mongodb://0.0.0.0:27017/'
+// const client = new MongoClient(uri);
 
 
 
@@ -71,7 +71,6 @@ async function run() {
     // done
     app.post('/users', async (req, res) => {
       const user = req.body;
-      console.log(user.saveUser);
       const query = { email: user.email }
       const existingUser = await usersCollection.findOne(query);
 
@@ -187,12 +186,12 @@ async function run() {
 
     // display 6 populer classes on the home page based on availableSeats
     // done
-    app.get('/populerSixClasses', async (req, res) => {
+    app.get('/populerClasses', async (req, res) => {
       const result = await paymentCollection.find().limit(6).toArray();
       res.send(result)
     })
 
-
+    // done
     app.get('/populerInstructor', async (req, res) => {
       const query = { role: "instructor" }
       const result = await usersCollection.find(query).limit(6).toArray();
@@ -200,17 +199,17 @@ async function run() {
     })
 
     // display payment history on payMentHistory dashbord route
-    app.get('/payMentHistory', async (req, res) => {
+    app.get('/payMentHistory', verifyJWT, async (req, res) => {
       const email = req.query.email;
 
       if (!email) {
         res.send([]);
       }
 
-      // const decodedEmail = req.decoded.email;
-      // if (email !== decodedEmail) {
-      //   return res.status(403).send({ error: true, message: 'forbidden access' })
-      // }
+      const decodedEmail = req.decoded.email;
+      if (email !== decodedEmail) {
+        return res.status(403).send({ error: true, message: 'forbidden access' })
+      }
       const query = { userEmail: email };
       const result = await paymentCollection.find(query).toArray();
       res.send(result);
@@ -218,7 +217,11 @@ async function run() {
 
     // display all populer classes on the admin manage classes dashbord
     // done
-    app.get('/allClass', async (req, res) => {
+    app.get('/allClass', verifyJWT, async (req, res) => {
+      const decodedEmail = req.decoded.email;
+      if (email !== decodedEmail) {
+        return res.status(403).send({ error: true, message: 'forbidden access' })
+      }
       const result = await classCollection.find().toArray();
       res.send(result)
     })
@@ -244,7 +247,6 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const update = { $set: { status: 'denied' } };
       const updateResult = await classCollection.updateOne(query, update);
-      console.log(update, updateResult);
       res.send({ updateResult });
     });
 
@@ -259,7 +261,6 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const update = { $set: { feedback } };
       const updateResult = await classCollection.updateOne(query, update);
-      console.log(update);
       res.send({ updateResult });
 
     });
@@ -292,17 +293,18 @@ async function run() {
 
     // display selectedClasses to mySelectedClasses on student dashbord
     // done
-    app.get('/selectedClasses',  async (req, res) => {
+    app.get('/selectedClasses', verifyJWT, async (req, res) => {
       const email = req.query.email;
 
       if (!email) {
         res.send([]);
       }
 
-      // const decodedEmail = req.decoded.email;
-      // if (email !== decodedEmail) {
-      //   return res.status(403).send({ error: true, message: 'forbidden access' })
-      // }
+      const decodedEmail = req.decoded.email;
+      if (email !== decodedEmail) {
+        return res.status(403).send({ error: true, message: 'forbidden access' })
+      }
+
       const query = { userEmail: email };
       const result = await selectedClassCollection.find(query).toArray();
       res.send(result);
@@ -355,7 +357,6 @@ async function run() {
     // TODO: can't delete after insert
     app.post('/payments', async (req, res) => {
       const payment = req.body;
-      console.log("how are you - payment ", payment);
       const query = { _id: payment.id };
       if (!payment.id) {
         console.log("mara khaiya jibon ta borbad", "query tui id diya la", query);
@@ -363,8 +364,13 @@ async function run() {
       }
       const insertResult = await paymentCollection.insertOne(payment);
 
-
       const deleteResult = await selectedClassCollection.deleteOne(query);
+      if (deleteResult.deletedCount === 0) {
+        console.log("Successfully deleted one document.");
+        return res.send(deleteResult)
+      } else {
+        console.log("No documents matched the query. Deleted 0 documents.");
+      }
       console.log("delete korte parsi! - ", deleteResult, "insertResult inject koira falaisi - ", insertResult);
 
       res.send({ insertResult, deleteResult });
