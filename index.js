@@ -11,22 +11,22 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// const verifyJWT = (req, res, next) => {
-//   const authorization = req.headers.authorization;
-//   if (!authorization) {
-//     return res.status(401).send({ error: true, message: 'unauthorized access' });
-//   }
-//   // bearer token
-//   const token = authorization.split(' ')[1];
+const verifyJWT = (req, res, next) => {
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return res.status(401).send({ error: true, message: 'unauthorized access' });
+  }
+  // bearer token
+  const token = authorization.split(' ')[1];
 
-//   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-//     if (err) {
-//       return res.status(401).send({ error: true, message: 'unauthorized access' })
-//     }
-//     req.decoded = decoded;
-//     next();
-//   })
-// }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ error: true, message: 'unauthorized access' })
+    }
+    req.decoded = decoded;
+    next();
+  })
+}
 
 
 
@@ -111,6 +111,16 @@ async function run() {
       res.send(result);
     })
 
+    // isStudent role
+    // done
+    app.get('/users/student/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const result = { student: user?.role === 'student' };
+      res.send(result);
+    })
+
 
     // make admin
     // done
@@ -169,7 +179,7 @@ async function run() {
       res.send(result)
     })
 
-    // display all classes on home page
+    // display all classes on class page
     app.get('/classes', async (req, res) => {
       const classes = await classCollection.find().toArray();
       res.send(classes);
@@ -177,7 +187,7 @@ async function run() {
 
     // display 6 populer classes on the home page based on availableSeats
     // done
-    app.get('/populer6Classes', async (req, res) => {
+    app.get('/populerSixClasses', async (req, res) => {
       const result = await paymentCollection.find().limit(6).toArray();
       res.send(result)
     })
@@ -263,20 +273,13 @@ async function run() {
       res.send(instructor)
     })
 
-    // display all classes of a instructor on instructor dashbord
+    // display all add classes of a particular instructor on instructor dashbord
+    // done 
     app.get('/instructor/:email', async (req, res) => {
       const email = req.params.email;
       const sameEmail = { instructorEmail: email }
       const instructorEmail = await classCollection.find(sameEmail).toArray();
       res.send(instructorEmail)
-    })
-
-    app.get('/instructor/:email', async (req, res) => {
-      const { email } = req.params;
-      const query = { instructorEmail: email }
-      const result = await classCollection.find(query).toArray();
-      console.log("result", result)
-      res.send(result)
     })
 
     // selectedClass stored in db
@@ -289,7 +292,7 @@ async function run() {
 
     // display selectedClasses to mySelectedClasses on student dashbord
     // done
-    app.get('/selectedClasses', async (req, res) => {
+    app.get('/selectedClasses',  async (req, res) => {
       const email = req.query.email;
 
       if (!email) {
@@ -321,7 +324,7 @@ async function run() {
       res.send(result)
     })
 
-    // display data for payment via id
+    // display data for payment pay for single course via id
     // done
     app.get('/dashbord/payment/:id', async (req, res) => {
       const id = req.params.id;
@@ -370,12 +373,17 @@ async function run() {
 
 
     // data display after successfully pay on the my enroll class
+    // done
     app.get('/payments', async (req, res) => {
       const email = req.query.email;
 
       if (!email) {
         res.send([])
       }
+      // const decodedEmail = req.decoded.email;
+      // if (email !== decodedEmail) {
+      //   return res.status(403).send({ error: true, message: 'forbidden access' })
+      // }
 
       const query = { userEmail: email };
       const result = await paymentCollection.find(query).toArray();
