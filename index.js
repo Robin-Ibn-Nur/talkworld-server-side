@@ -113,7 +113,7 @@ async function run() {
 
     // isStudent role
     // done
-    app.get('/users/student/:email', verifyJWT, async (req, res) => {
+    app.get('/users/student/:email', async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const user = await usersCollection.findOne(query);
@@ -201,7 +201,7 @@ async function run() {
 
     // display payment history on payMentHistory dashbord route
     // done
-    app.get('/payMentHistory', verifyJWT, async (req, res) => {
+    app.get('/payMentHistory', async (req, res) => {
       const email = req.query.email;
 
       if (!email) {
@@ -310,9 +310,11 @@ async function run() {
 
     // display data for payment pay for single course via id
     // done
-    app.get('/dashbord/payment/:id', verifyJWT, async (req, res) => {
+    app.get('/dashbord/payment/:id', async (req, res) => {
       const id = req.params.id;
+      console.log(id);
       const query = { _id: new ObjectId(id) };
+      console.log(query);
       const result = await selectedClassCollection.findOne(query);
       res.send(result)
     });
@@ -337,7 +339,7 @@ async function run() {
 
     // payment related api
     // done
-    app.post('/payments', verifyJWT, async (req, res) => {
+    app.post('/payments', async (req, res) => {
       const payment = req.body;
       const query = { _id: new ObjectId(payment.id) };
       if (!payment.id) {
@@ -359,7 +361,7 @@ async function run() {
 
     // data display after successfully pay on the my enroll class
     // done
-    app.get('/payments', verifyJWT, async (req, res) => {
+    app.get('/payments', async (req, res) => {
       const email = req.query.email;
 
       if (!email) {
