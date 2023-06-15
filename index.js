@@ -59,6 +59,7 @@ async function run() {
     const paymentCollection = client.db("TalkWorld").collection("payment");
 
     //create jwt token
+    // done
     app.post('/jwt-token', (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
@@ -67,6 +68,7 @@ async function run() {
 
 
     // creating a new user
+    // done
     app.post('/users', async (req, res) => {
       const user = req.body;
       console.log(user.saveUser);
@@ -82,6 +84,7 @@ async function run() {
     });
 
     // display all users on admin page
+    // done
     app.get('/users', async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result)
@@ -89,6 +92,7 @@ async function run() {
 
 
     // isInstructor role
+    // done
     app.get('/users/instructor/:email', async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
@@ -98,6 +102,7 @@ async function run() {
     })
 
     // isAdmin role
+    // done
     app.get('/users/admin/:email', async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
@@ -108,6 +113,7 @@ async function run() {
 
 
     // make admin
+    // done
     app.patch('/users/admin/:id', async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
@@ -123,6 +129,7 @@ async function run() {
     })
 
     // make instructor
+    // done
     app.patch('/users/instructor/:id', async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
@@ -136,6 +143,7 @@ async function run() {
     })
 
     // save a class in database by instructor
+    // done
     app.post('/add-a-class', async (req, res) => {
       const addClass = req.body;
 
@@ -167,12 +175,36 @@ async function run() {
       res.send(classes);
     })
 
-    // display 6 populer classes on the home page
-    // TODO: 
+    // display 6 populer classes on the home page based on availableSeats
+    // done
     app.get('/populer6Classes', async (req, res) => {
-      const result = await classCollection.find().limit(6).toArray();
+      const result = await paymentCollection.find().limit(6).toArray();
       res.send(result)
     })
+
+
+    app.get('/populerInstructor', async (req, res) => {
+      const query = { role: "instructor" }
+      const result = await usersCollection.find(query).limit(6).toArray();
+      res.send(result)
+    })
+
+    // display payment history on payMentHistory dashbord route
+    app.get('/payMentHistory', async (req, res) => {
+      const email = req.query.email;
+
+      if (!email) {
+        res.send([]);
+      }
+
+      // const decodedEmail = req.decoded.email;
+      // if (email !== decodedEmail) {
+      //   return res.status(403).send({ error: true, message: 'forbidden access' })
+      // }
+      const query = { userEmail: email };
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    });
 
     // display all populer classes on the admin manage classes dashbord
     // done
@@ -213,7 +245,7 @@ async function run() {
       const { id } = req.params;
       const { feedback } = req.body;
 
-      
+
       const query = { _id: new ObjectId(id) };
       const update = { $set: { feedback } };
       const updateResult = await classCollection.updateOne(query, update);
@@ -237,6 +269,14 @@ async function run() {
       const sameEmail = { instructorEmail: email }
       const instructorEmail = await classCollection.find(sameEmail).toArray();
       res.send(instructorEmail)
+    })
+
+    app.get('/instructor/:email', async (req, res) => {
+      const { email } = req.params;
+      const query = { instructorEmail: email }
+      const result = await classCollection.find(query).toArray();
+      console.log("result", result)
+      res.send(result)
     })
 
     // selectedClass stored in db
@@ -312,16 +352,23 @@ async function run() {
     // TODO: can't delete after insert
     app.post('/payments', async (req, res) => {
       const payment = req.body;
+      console.log("how are you - payment ", payment);
+      const query = { _id: payment.id };
+      if (!payment.id) {
+        console.log("mara khaiya jibon ta borbad", "query tui id diya la", query);
+        return
+      }
       const insertResult = await paymentCollection.insertOne(payment);
-      const query = { _id: new ObjectId(payment._id) };
+
+
       const deleteResult = await selectedClassCollection.deleteOne(query);
-      console.log("deleteResult - ", deleteResult, "insertResult - ", insertResult);
+      console.log("delete korte parsi! - ", deleteResult, "insertResult inject koira falaisi - ", insertResult);
 
       res.send({ insertResult, deleteResult });
     });
 
 
-    
+
     // data display after successfully pay on the my enroll class
     app.get('/payments', async (req, res) => {
       const email = req.query.email;
