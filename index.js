@@ -84,7 +84,7 @@ async function run() {
 
     // display all users on admin page
     // done
-    app.get('/users', async (req, res) => {
+    app.get('/users', verifyJWT, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result)
     })
@@ -92,7 +92,7 @@ async function run() {
 
     // isInstructor role
     // done
-    app.get('/users/instructor/:email', async (req, res) => {
+    app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const user = await usersCollection.findOne(query);
@@ -105,10 +105,6 @@ async function run() {
     app.get('/users/admin/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
 
-
-      if (req.decoded.email !== email) {
-        res.send({ admin: false })
-      }
       const query = { email: email };
       const user = await usersCollection.findOne(query);
       const result = { admin: user?.role === 'admin' };
@@ -117,7 +113,7 @@ async function run() {
 
     // isStudent role
     // done
-    app.get('/users/student/:email', async (req, res) => {
+    app.get('/users/student/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const user = await usersCollection.findOne(query);
@@ -197,7 +193,7 @@ async function run() {
     })
 
     // done
-    app.get('/populerInstructor', async (req, res) => {
+    app.get('/populerInstructor', verifyJWT, async (req, res) => {
       const query = { role: "instructor" }
       const result = await usersCollection.find(query).limit(6).toArray();
       res.send(result)
@@ -211,10 +207,6 @@ async function run() {
         res.send([]);
       }
 
-      const decodedEmail = req.decoded.email;
-      if (email !== decodedEmail) {
-        return res.status(403).send({ error: true, message: 'forbidden access' })
-      }
       const query = { userEmail: email };
       const result = await paymentCollection.find(query).toArray();
       res.send(result);
@@ -233,7 +225,7 @@ async function run() {
 
     // status approved via id
     // done
-    app.patch('/classes/approve/:id', async (req, res) => {
+    app.patch('/classes/approve/:id', verifyJWT, async (req, res) => {
 
       const { id } = req.params;
 
@@ -245,7 +237,7 @@ async function run() {
 
     // status denied via id
     // done
-    app.patch('/classes/denied/:id', async (req, res) => {
+    app.patch('/classes/denied/:id', verifyJWT, async (req, res) => {
 
       const { id } = req.params;
 
@@ -257,7 +249,7 @@ async function run() {
 
     // sending feedback for a class
     // done
-    app.post('/classes/feedback/:id', async (req, res) => {
+    app.post('/classes/feedback/:id', verifyJWT, async (req, res) => {
 
       const { id } = req.params;
       const { feedback } = req.body;
@@ -298,16 +290,11 @@ async function run() {
 
     // display selectedClasses to mySelectedClasses on student dashbord
     // done
-    app.get('/selectedClasses', async (req, res) => {
+    app.get('/selectedClasses', verifyJWT, async (req, res) => {
       const email = req.query.email;
       if (!email) {
         res.send([]);
       }
-
-      // const decodedEmail = req.decoded.email;
-      // if (email !== decodedEmail) {
-      //   return res.status(403).send({ error: true, message: 'forbidden access' })
-      // }
 
       const query = { userEmail: email };
       const result = await selectedClassCollection.find(query).toArray();
@@ -317,22 +304,16 @@ async function run() {
 
     // delete selectedClass from mySelectedClasses
     // done
-    app.delete('/selectedClasses/:id', async (req, res) => {
+    app.delete('/selectedClasses/:id', verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await selectedClassCollection.deleteOne(query)
-      // if (result.deletedCount === 0) {
-      //   console.log("Successfully deleted one document.");
-      //   return res.send(result)
-      // } else {
-      //   console.log("No documents matched the query. Deleted 0 documents.");
-      // }
       res.send(result)
     })
 
     // display data for payment pay for single course via id
     // done
-    app.get('/dashbord/payment/:id', async (req, res) => {
+    app.get('/dashbord/payment/:id',verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await selectedClassCollection.findOne(query);
@@ -359,7 +340,7 @@ async function run() {
 
     // payment related api
     // done
-    app.post('/payments', async (req, res) => {
+    app.post('/payments',verifyJWT, async (req, res) => {
       const payment = req.body;
       const query = { _id: new ObjectId(payment.id) };
       if (!payment.id) {
@@ -373,7 +354,7 @@ async function run() {
       } else {
         console.log("No documents matched the query. Deleted 0 documents.");
       }
-      
+
       res.send({ insertResult, deleteResult });
     });
 
@@ -381,17 +362,13 @@ async function run() {
 
     // data display after successfully pay on the my enroll class
     // done
-    app.get('/payments', async (req, res) => {
+    app.get('/payments', verifyJWT, async (req, res) => {
       const email = req.query.email;
 
       if (!email) {
         res.send([])
       }
-      // const decodedEmail = req.decoded.email;
-      // if (email !== decodedEmail) {
-      //   return res.status(403).send({ error: true, message: 'forbidden access' })
-      // }
-
+      
       const query = { userEmail: email };
       const result = await paymentCollection.find(query).toArray();
       res.send(result)
