@@ -193,13 +193,14 @@ async function run() {
     })
 
     // done
-    app.get('/populerInstructor', verifyJWT, async (req, res) => {
+    app.get('/populerInstructor', async (req, res) => {
       const query = { role: "instructor" }
       const result = await usersCollection.find(query).limit(6).toArray();
       res.send(result)
     })
 
     // display payment history on payMentHistory dashbord route
+    // done
     app.get('/payMentHistory', verifyJWT, async (req, res) => {
       const email = req.query.email;
 
@@ -313,7 +314,7 @@ async function run() {
 
     // display data for payment pay for single course via id
     // done
-    app.get('/dashbord/payment/:id',verifyJWT, async (req, res) => {
+    app.get('/dashbord/payment/:id', verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await selectedClassCollection.findOne(query);
@@ -340,7 +341,7 @@ async function run() {
 
     // payment related api
     // done
-    app.post('/payments',verifyJWT, async (req, res) => {
+    app.post('/payments', verifyJWT, async (req, res) => {
       const payment = req.body;
       const query = { _id: new ObjectId(payment.id) };
       if (!payment.id) {
@@ -368,7 +369,7 @@ async function run() {
       if (!email) {
         res.send([])
       }
-      
+
       const query = { userEmail: email };
       const result = await paymentCollection.find(query).toArray();
       res.send(result)
@@ -387,7 +388,7 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-  res.send('TalkWorld server is running')
+  res.send('TalkWorld server is running authorized by RoBiN')
 })
 
 app.listen(port, () => {
