@@ -82,9 +82,19 @@ async function run() {
       res.send(result);
     });
 
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email }
+      const user = await usersCollection.findOne(query);
+      if (user?.role !== 'admin') {
+        return res.status(403).send({ error: true, message: 'forbidden message' });
+      }
+      next();
+    }
+
     // display all users on admin page
     // done
-    app.get('/users', verifyJWT, async (req, res) => {
+    app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result)
     })
@@ -92,8 +102,10 @@ async function run() {
 
     // isInstructor role
     // done
-    app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
+    app.get('/users/instructor/:email', async (req, res) => {
       const email = req.params.email;
+
+      
       const query = { email: email };
       const user = await usersCollection.findOne(query);
       const result = { instructor: user?.role === 'instructor' };
@@ -102,8 +114,10 @@ async function run() {
 
     // isAdmin role
     // done
-    app.get('/users/admin/:email', verifyJWT, async (req, res) => {
+    app.get('/users/admin/:email', async (req, res) => {
       const email = req.params.email;
+
+      
 
       const query = { email: email };
       const user = await usersCollection.findOne(query);
@@ -115,6 +129,8 @@ async function run() {
     // done
     app.get('/users/student/:email', async (req, res) => {
       const email = req.params.email;
+
+     
       const query = { email: email };
       const user = await usersCollection.findOne(query);
       const result = { student: user?.role === 'student' };
@@ -222,7 +238,7 @@ async function run() {
 
     // status approved via id
     // done
-    app.patch('/classes/approve/:id', verifyJWT, async (req, res) => {
+    app.patch('/classes/approve/:id', async (req, res) => {
 
       const { id } = req.params;
 
@@ -234,7 +250,7 @@ async function run() {
 
     // status denied via id
     // done
-    app.patch('/classes/denied/:id', verifyJWT, async (req, res) => {
+    app.patch('/classes/denied/:id', async (req, res) => {
 
       const { id } = req.params;
 
@@ -246,7 +262,7 @@ async function run() {
 
     // sending feedback for a class
     // done
-    app.post('/classes/feedback/:id', verifyJWT, async (req, res) => {
+    app.post('/classes/feedback/:id', async (req, res) => {
 
       const { id } = req.params;
       const { feedback } = req.body;
@@ -301,7 +317,7 @@ async function run() {
 
     // delete selectedClass from mySelectedClasses
     // done
-    app.delete('/selectedClasses/:id', verifyJWT, async (req, res) => {
+    app.delete('/selectedClasses/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await selectedClassCollection.deleteOne(query)
